@@ -7,17 +7,25 @@ const main = async () => {
   const rawDelegatesData = (await apiRes.json()).delegates;
 
   // Write delegates to file
-  const delegates = Array.from(
-    new Set(rawDelegatesData.map((del) => del.address))
-  );
-  writeFileSync("./delegates.txt", delegates.join("\n"));
+  const delegates = [
+    ["delegate", "mkr_delegated"],
+    ...Array.from(
+      new Map(
+        rawDelegatesData
+          .map((del) => [del.address, +del.mkrDelegated])
+          .sort((a, b) => a[1] - b[1])
+      )
+    ).sort((a, b) => b[1] - a[1]),
+  ];
+
+  writeFileSync("./delegates.csv", delegates.join("\n"));
 
   // Process delegators
   const rawDelegators = rawDelegatesData
     .map((del) => del.mkrLockedDelegate)
     .flat()
     .map((delegator) => ({
-      address: delegator.fromAddress,
+      address: delegator.immediateCaller,
       amount: +delegator.lockAmount,
     }));
 
@@ -32,13 +40,13 @@ const main = async () => {
     else delegatorsMap.set(delegator.address, delegator.amount);
   }
 
-  const delegators = [];
-  delegatorsMap.forEach((amount, address) => {
-    if (amount >= 0.002) delegators.push(address);
-  });
+  const delegators = [
+    ["delegator", "mkr_delegated"],
+    ...Array.from(delegatorsMap).sort((a, b) => b[1] - a[1]),
+  ];
 
   // write delegators  to file
-  writeFileSync("./delegators.txt", delegators.join("\n"));
+  writeFileSync("./delegators.csv", delegators.join("\n"));
 };
 
 main();

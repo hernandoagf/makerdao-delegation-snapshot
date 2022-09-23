@@ -10,5 +10,5 @@
 !.yarn/cache
 #.pnp.*
 
-delegates.txt
-delegators.txt
+delegates.csv
+delegators.csv
